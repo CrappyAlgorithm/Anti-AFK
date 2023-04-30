@@ -1,6 +1,6 @@
 import sys
 from PyQt5 import QtGui, QtCore
-from PyQt5.QtWidgets import QPushButton, QApplication, QHBoxLayout, QWidget, QMainWindow, QComboBox
+from PyQt5.QtWidgets import QPushButton, QApplication, QHBoxLayout, QWidget, QMainWindow, QComboBox, QAction
 from os import listdir
 from os.path import isfile, join
 from config_object import Config_Object
@@ -15,13 +15,21 @@ class MainWindow(QMainWindow):
         self.resize(500,100)
         self.move(100,100)
         self.setWindowTitle('Anti-Disco')
-        # self.setWindowIcon(QtGui.QIcon('icon.ico')) Will be added.
+        menu_bar = self.menuBar()
+        config_menu = menu_bar.addMenu('&Konfiguration')
+        new_config = QAction('&Neu', self)
+        new_config.setStatusTip('Legt eine neue Konfiguration an.')
+        new_config.setShortcut('Ctrl+N')
+        new_config.triggered.connect(self.new_configuration)
+        config_menu.addAction(new_config)
         self.setCentralWidget(self.widget)
 
     def closeEvent(self, event):
-        print("User has clicked the red x on the main window")
         self.widget._stop()
         event.accept()
+
+    def new_configuration(self, s):
+        print(f'new config')
 
 class Gui(QWidget):
     def __init__(self):
@@ -53,8 +61,12 @@ class Gui(QWidget):
         self.layout.addWidget(self.config)
         config_files = [f for f in listdir(self.config_folder) if isfile(join(self.config_folder, f))]
         for file in config_files:
-            self.configs.update({file : Config_Object.load_config(f'{self.config_folder}/{file}') })
-            self.config.addItem(file)
+            self.add_config(file)
+
+
+    def add_config(self, name):
+        self.configs.update({name : Config_Object.load_config(f'{self.config_folder}/{name}') })
+        self.config.addItem(name)
 
 
     def _change_config(self, name):
