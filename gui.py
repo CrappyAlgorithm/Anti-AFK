@@ -1,5 +1,3 @@
-import configparser
-import ast
 import sys
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtWidgets import QPushButton, QApplication, QHBoxLayout, QWidget, QMainWindow, QComboBox
@@ -55,17 +53,9 @@ class Gui(QWidget):
         self.layout.addWidget(self.config)
         config_files = [f for f in listdir(self.config_folder) if isfile(join(self.config_folder, f))]
         for file in config_files:
-            self.configs.update({file : self.load_config(f'{self.config_folder}/{file}') })
+            self.configs.update({file : Config_Object.load_config(f'{self.config_folder}/{file}') })
             self.config.addItem(file)
 
-
-    def load_config(self, filename):
-        parser = configparser.ConfigParser()
-        parser.read(filename)
-        sleep_duration = parser.getint('CONFIG', 'sleep_duration', fallback=300)
-        press_duration = parser.getfloat('CONFIG', 'press_duration', fallback=1)
-        keymap = ast.literal_eval(parser.get('CONFIG', 'keymap', fallback='[w,s,a,d]'))
-        return Config_Object(sleep_duration, press_duration, keymap)
 
     def _change_config(self, name):
         self.filename = name
