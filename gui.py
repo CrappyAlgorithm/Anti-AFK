@@ -2,8 +2,12 @@ import configparser
 import ast
 import sys
 from PyQt5 import QtGui, QtCore
-from PyQt5.QtWidgets import QPushButton, QApplication, QHBoxLayout, QWidget, QMainWindow
+from PyQt5.QtWidgets import QPushButton, QApplication, QHBoxLayout, QWidget, QMainWindow, QComboBox
+from os import listdir
+from os.path import isfile, join
+from config_object import Config_Object
 from key_presser import KeyPresser
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -30,7 +34,10 @@ class Gui(QWidget):
     def init_gui(self):
         self.layout = QHBoxLayout()
         self.setLayout(self.layout)
-        self.load_config()
+        self.config_folder = 'config'
+        self.filename = 'default'
+        self.configs = {}
+        self.load_configs()
         self.load_button()
 
     def load_button(self):
@@ -42,18 +49,32 @@ class Gui(QWidget):
         self.layout.addWidget(self.stop)
 
 
-    def load_config(self):
-        parser = configparser.ConfigParser()
-        parser.read('anti-disco.config')
-        self.sleep_duration = parser.getint('DEFAULT', 'sleep_duration', fallback=300)
-        self.press_duration = parser.getfloat('DEFAULT', 'press_duration', fallback=1)
-        self.keymap = ast.literal_eval(parser.get('DEFAULT', 'keymap', fallback='[w,s,a,d]'))
+    def load_configs(self):
+        self.config = QComboBox()
+        self.config.currentTextChanged.connect(self._change_config)
+        self.layout.addWidget(self.config)
+        config_files = [f for f in listdir(self.config_folder) if isfile(join(self.config_folder, f))]
+        for file in config_files:
+            self.configs.update({file : self.load_config(f'{self.config_folder}/{file}') })
+            self.config.addItem(file)
 
+
+    def load_config(self, filename):
+        parser = configparser.ConfigParser()
+        parser.read(filename)
+        sleep_duration = parser.getint('CONFIG', 'sleep_duration', fallback=300)
+        press_duration = parser.getfloat('CONFIG', 'press_duration', fallback=1)
+        keymap = ast.literal_eval(parser.get('CONFIG', 'keymap', fallback='[w,s,a,d]'))
+        return Config_Object(sleep_duration, press_duration, keymap)
+
+    def _change_config(self, name):
+        self.filename = name
 
     def _start(self):
         if self.key_presser is not None:
             self.key_presser.shutdown_flag.set()
-        self.key_presser = KeyPresser(self.sleep_duration, self.press_duration, self.keymap)
+        
+        self.key_presser = KeyPresser(self.configs[self.filename])
         self.key_presser.start()
 
     def _stop(self):

@@ -1,0 +1,7 @@
+[CONFIG]
+#Duration between key pressing (example: 1, 120, 300) 
+sleep_duration = 10
+#Duration of key pressing (example: 0.5, 1.2, 2.0)
+press_duration = 0.5
+#Keys to choose from
+keymap = ['y','x','c','v']
